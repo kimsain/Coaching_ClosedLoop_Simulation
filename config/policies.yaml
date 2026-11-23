@@ -1,0 +1,70 @@
+# All parameters are design assumptions for a synthetic simulation.
+# They are not estimated from any real user data.
+
+simulation:
+  n_users: 300
+  weeks: 12
+  eval_seeds: [11, 12, 13, 14, 15]
+  calibration_seeds: [901, 902, 903, 904, 905]
+  persona_runs: 30
+  persona_seed: 501
+
+domains: [meal, exercise, sleep, medication]
+slots: [morning, midday, evening]
+
+calibration:
+  target_completion: 0.45     # synthetic "observed" completion rate under the current policy
+  tolerance_pp: 1.0
+  search_range: [-4.0, 4.0]
+  max_iter: 40
+
+population:
+  motivation_mean: 0.0
+  motivation_sd: 1.0
+  medication_share: 0.4       # only these users get a medication routine
+  stated_slot_accuracy: 0.6   # chance the slot a user states is their real best slot
+  habit_init_max: 0.3
+  time_constraint_beta: [2, 3]
+  time_noise_sd: 0.15
+  fatigue_sensitivity: [0.5, 1.5]
+
+user_model:
+  base_logit: 0.0             # replaced by calibration
+  domain_offset: {meal: 0.2, exercise: -0.4, sleep: 0.0, medication: 0.6}
+  motivation: 0.8
+  habit: 1.5
+  burden: 0.5                 # per difficulty level, scaled by (1 + time constraint)
+  fatigue: 0.25
+  opened_boost: 0.6           # completion lift on a day the user opened a notification
+  open_base: -1.0
+  open_motivation: 0.5
+  open_fatigue: 0.4
+  open_slot_match: 0.8
+  open_active_yesterday: 0.7
+  fatigue_decay: 0.7
+  fatigue_gain: 0.3
+  motivation_reversion: 0.9
+  motivation_lr: 0.3
+  habit_gain: 0.05
+  habit_decay: 0.03
+
+policies:
+  current:
+    difficulty: 2
+    push_slots: [0, 2]        # fixed morning and evening push to every user, every day
+  new:
+    max_per_day: 2
+    start_difficulty: 1
+    max_difficulty: 3
+    level_up_after: 3         # consecutive completions before the routine gets harder
+    level_down_after: 2       # consecutive misses before the routine gets easier
+    stop_after_unopened: 4    # consecutive unopened notifications before pausing
+    pause_days: 7
+    dormant_after_days: 5     # idle days before reducing to a single routine
+    followup_window_days: 2   # second nudge only for users idle 1..N days
+
+personas:
+  busy_worker:            {motivation: 0.3,  time_constraint: 0.8, fatigue_sensitivity: 1.0, pref_slot: 2, stated_slot: 0, medication: false, habit: 0.10}
+  motivated_beginner:     {motivation: 1.0,  time_constraint: 0.3, fatigue_sensitivity: 0.8, pref_slot: 0, stated_slot: 0, medication: false, habit: 0.05}
+  notification_sensitive: {motivation: 0.2,  time_constraint: 0.4, fatigue_sensitivity: 1.5, pref_slot: 1, stated_slot: 1, medication: true,  habit: 0.20}
+  drifting_away:          {motivation: -1.2, time_constraint: 0.5, fatigue_sensitivity: 1.2, pref_slot: 2, stated_slot: 2, medication: true,  habit: 0.05}
